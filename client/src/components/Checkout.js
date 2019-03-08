@@ -3,7 +3,11 @@ import React, { Component } from 'react';
 import { Container, Box, Heading, TextField, Text, Modal, Spinner, Button } from 'gestalt';
 import { Elements, StripeProvider, CardElement, injectStripe } from 'react-stripe-elements';
 import ToastMessage from './ToastMessage';
-import { getCart, calculatePrice } from './utils';
+import { getCart, calculatePrice, clearCart, calculateAmount } from './utils';
+import { withRouter } from 'react-router-dom';
+import Strapi from 'strapi-sdk-javascript/build/main';
+const apiUrl = process.env.API_URL || 'http://localhost:1337';
+const strapi = new Strapi(apiUrl);
 
 class _CheckoutForm extends Component {
 	state = {
@@ -37,15 +41,55 @@ class _CheckoutForm extends Component {
 		this.setState({ modal: true });
 	};
 
-	handleSubmitOrder = () => {};
+	handleSubmitOrder = async () => {
+		const { cartItems, city, address, postalCode } = this.state;
+		const amount = calculateAmount(cartItems);
+
+		//process order
+		this.setState({ orderProcessing: true });
+		let token;
+		try {
+			const response = await this.props.stripe.createToken();
+			token = response.token.id;
+			await strapi.createEntry('orders', {
+				amount,
+				shoes: cartItems,
+				city,
+				postalCode,
+				address,
+				token
+			});
+			this.setState({ orderProcessing: false, modal: false });
+			clearCart();
+			this.showToast('Your order has been successfully submitted!', true);
+			//create stripe token
+			//create order with strapi sdk(make request to backend)
+			// set orderProcessing - false, set modal - false
+			//clear user cart of shoes
+			// show success toast
+		} catch (err) {
+			this.setState({ orderProcessing: false, modal: false });
+			this.showToast(err.message);
+			// set order processing -false , modal- false
+			// show error toast
+		}
+	};
 
 	isFormEmpty = ({ address, postalCode, city, confirmationEmailAddress }) => {
 		return !address || !postalCode || !city || !confirmationEmailAddress;
 	};
 
-	showToast = (toastMessage) => {
+	showToast = (toastMessage, redirect = false) => {
 		this.setState({ toast: true, toastMessage });
-		setTimeout(() => this.setState({ toast: false, toastMessage: '' }), 4000);
+		setTimeout(
+			() =>
+				this.setState(
+					{ toast: false, toastMessage: '' },
+					// if true passed to 'redirect' back home
+					() => redirect && this.props.history.push('/')
+				),
+			4000
+		);
 	};
 
 	closeModal = () => this.setState({ modal: false });
@@ -111,7 +155,7 @@ class _CheckoutForm extends Component {
 								{/* Postal Code Input */}
 								<TextField
 									id="postalCode"
-									type="number"
+									type="text"
 									name="postalCode"
 									placeholder="Postal Code"
 									onChange={this.handleChange}
@@ -228,7 +272,7 @@ const ConfirmationModal = ({ orderProcessing, cartItems, closeModal, handleSubmi
 	</Modal>
 );
 
-const CheckoutForm = injectStripe(_CheckoutForm);
+const CheckoutForm = withRouter(injectStripe(_CheckoutForm));
 
 const Checkout = () => (
 	<StripeProvider apiKey="pk_live_C76cvnQkPXeO8DtsZBlz7GFe">
