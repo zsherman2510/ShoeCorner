@@ -1,0 +1,19 @@
+{
+  "defaultConnection": "default",
+  "connections": {
+    "default": {
+      "connector": "strapi-hook-mongoose",
+      "settings": {
+        "client": "mongo",
+        "host": "ds157735.mlab.com",
+        "port": "57735",
+        "database": "shoecorner",
+        "username": "zavion",
+        "password": "Shoecorner1"
+      },
+      "options": {
+        "authenticationDatabase": "shoecorner"
+      }
+    }
+  }
+}
