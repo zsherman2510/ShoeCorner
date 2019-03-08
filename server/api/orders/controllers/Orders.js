@@ -1,4 +1,4 @@
-'use strict';
+('use strict');
 
 const stripe = require('stripe')('sk_live_1mfX0dh4OnAqGYITqpeNTOjB');
 /**

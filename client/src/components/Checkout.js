@@ -6,6 +6,7 @@ import ToastMessage from './ToastMessage';
 import { getCart, calculatePrice, clearCart, calculateAmount } from './utils';
 import { withRouter } from 'react-router-dom';
 import Strapi from 'strapi-sdk-javascript/build/main';
+import { publicKey } from './utils/Keys';
 const apiUrl = process.env.API_URL || 'http://localhost:1337';
 const strapi = new Strapi(apiUrl);
 
@@ -275,7 +276,7 @@ const ConfirmationModal = ({ orderProcessing, cartItems, closeModal, handleSubmi
 const CheckoutForm = withRouter(injectStripe(_CheckoutForm));
 
 const Checkout = () => (
-	<StripeProvider apiKey="pk_live_C76cvnQkPXeO8DtsZBlz7GFe">
+	<StripeProvider apiKey={publicKey}>
 		<Elements>
 			<CheckoutForm />
 		</Elements>
